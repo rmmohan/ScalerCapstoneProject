@@ -1,3 +1,2 @@
-*.txt
 /order-service/docker/mysql/data
 /inventory-service/docker/mysql/data
