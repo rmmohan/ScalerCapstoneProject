@@ -23,7 +23,6 @@ Product Service
 3.  Start Docker
 4.  Inside product-service project create a file called docker-compose.yml in the root folder
 
-    version: '4'
     services:
       mongo:
         image: mongo:7.0.5

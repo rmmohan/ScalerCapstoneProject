@@ -25,6 +25,7 @@ Inventory Service
         ports:
           - "3306:3306"
         environment:
+          MYSQL_ROOT_PASSWORD: password@123
           MYSQL_DATABASE: inventory_service
           MYSQL_USER: appuser
           MYSQL_PASSWORD: apppassword@123
