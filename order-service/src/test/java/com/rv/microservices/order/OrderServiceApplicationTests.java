@@ -40,6 +40,6 @@ class OrderServiceApplicationTests {
 	}
 
 	private OrderRequest getOrderRequest() {
-		return new OrderRequest((long)1, "sku1234", BigDecimal.valueOf(1200), 1);
+		return new OrderRequest("sku1234", BigDecimal.valueOf(1200), 1);
 	}
 }
