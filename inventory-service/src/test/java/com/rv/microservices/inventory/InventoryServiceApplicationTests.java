@@ -1,5 +1,7 @@
 package com.rv.microservices.inventory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rv.microservices.inventory.dto.InventoryRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,6 +10,8 @@ import io.restassured.parsing.Parser;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+
+import java.util.Map;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -18,6 +22,8 @@ class InventoryServiceApplicationTests {
 
     @LocalServerPort
     private Integer port;
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setup() {
@@ -30,9 +36,12 @@ class InventoryServiceApplicationTests {
     void shouldCheckIfInventoryExists() throws Exception {
         InventoryRequest inventoryRequest = new InventoryRequest("iphone_15", 100);
 
+        Map<String, Object> params = mapper.convertValue(
+            inventoryRequest, new TypeReference<Map<String, Object>>() {}
+        );
+
         Boolean response = RestAssured.given()
-                .contentType("application/json")
-                .body(inventoryRequest)
+                .queryParams(params)
                 .when()
                 .get("/api/inventory")
                 .then()
@@ -48,9 +57,12 @@ class InventoryServiceApplicationTests {
     void shouldCheckIfInventoryDoesNotExist() throws Exception {
         InventoryRequest inventoryRequest = new InventoryRequest("iphone_15", 101);
 
+        Map<String, Object> params = mapper.convertValue(
+                inventoryRequest, new TypeReference<Map<String, Object>>() {}
+        );
+
         Boolean response = RestAssured.given()
-                .contentType("application/json")
-                .body(inventoryRequest)
+                .queryParams(params)
                 .when()
                 .get("/api/inventory")
                 .then()
