@@ -1,2 +1,3 @@
 /order-service/docker/mysql/data
 /inventory-service/docker/mysql/data
+/product-service/docker
