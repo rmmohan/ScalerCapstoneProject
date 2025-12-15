@@ -1,6 +1,7 @@
 package com.rv.microservices.order.service;
 
 import com.rv.microservices.order.dto.OrderRequest;
+import com.rv.microservices.order.exception.InventoryNotFoundException;
 import com.rv.microservices.order.model.Order;
 import com.rv.microservices.order.repository.OrderRepository;
 import com.rv.microservices.order.client.InventoryClient;
@@ -24,7 +25,7 @@ public class OrderService {
             var order = mapToOrder(orderRequest);
             orderRepository.save(order);
         } else {
-            throw new RuntimeException("Product with Skucode " + orderRequest.skuCode() + "is not in stock");
+            throw new InventoryNotFoundException("Product with Skucode " + orderRequest.skuCode() + " is not in stock");
         }
     }
 
