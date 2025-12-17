@@ -4,7 +4,6 @@ import static org.springframework.cloud.gateway.server.mvc.filter.BeforeFilterFu
 import static org.springframework.cloud.gateway.server.mvc.filter.FilterFunctions.setPath;
 import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions.http;
 import static org.springframework.cloud.gateway.server.mvc.predicate.GatewayRequestPredicates.path;
-import static org.springframework.web.servlet.function.RouterFunctions.route;
 
 import org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions;
 import org.springframework.context.annotation.Bean;
@@ -17,23 +16,26 @@ public class Routes {
     
     @Bean
     public RouterFunction<ServerResponse> productServiceRoute() {
-        return route().GET("/api/product", http())
-            .before(uri("http://localhost:8080"))
-            .build();
+        return GatewayRouterFunctions.route("product_service")
+                .route(path("/api/product"), http())
+                .before(uri("http://localhost:8080"))
+                .build();
     }
     
     @Bean
     public RouterFunction<ServerResponse> orderServiceRoute() {
-        return route().GET("/api/order", http())
-            .before(uri("http://localhost:8081"))
-            .build();
+        return GatewayRouterFunctions.route("order_service")
+                .route(path("/api/order"), http())
+                .before(uri("http://localhost:8081"))
+                .build();
     }
     
     @Bean
     public RouterFunction<ServerResponse> inventoryServiceRoute() {
-        return route().GET("/api/inventory", http())
-            .before(uri("http://localhost:8082"))
-            .build();
+        return GatewayRouterFunctions.route("inventory_service")
+                .route(path("/api/inventory"), http())
+                .before(uri("http://localhost:8082"))
+                .build();
     }
 
     @Bean
