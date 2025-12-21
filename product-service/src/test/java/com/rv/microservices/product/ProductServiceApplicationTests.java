@@ -56,12 +56,13 @@ class ProductServiceApplicationTests {
 
 		// Verify list size and name
 		org.junit.jupiter.api.Assertions.assertEquals(1, products.size());
-		org.junit.jupiter.api.Assertions.assertEquals(productRequest.name(), products.get(0).name());
+        org.junit.jupiter.api.Assertions.assertEquals(productRequest.skuCode(), products.get(0).skuCode());
+        org.junit.jupiter.api.Assertions.assertEquals(productRequest.name(), products.get(0).name());
 		org.junit.jupiter.api.Assertions.assertEquals(productRequest.description(), products.get(0).description());
 		org.junit.jupiter.api.Assertions.assertEquals(productRequest.price().intValueExact(), products.get(0).price().intValueExact());
 	}
 
 	private ProductRequest getProductRequest() {
-		return new ProductRequest("iPhone 13", "iPhone 13", BigDecimal.valueOf(1200));
+		return new ProductRequest("iPhone 13", "iPhone 13", "iPhone 13", BigDecimal.valueOf(1200));
 	}
 }
