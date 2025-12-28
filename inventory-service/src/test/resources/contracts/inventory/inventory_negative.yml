@@ -1,0 +1,13 @@
+description: "Verify that inventory service returns product status (negative) using query parameters"
+
+request:
+  method: GET
+  urlPath: /api/inventory
+  queryParameters:
+    skuCode: "pixel_8"
+    quantity: "101"
+response:
+  status: 200
+  body: "false"
+  headers:
+    Content-Type: application/json

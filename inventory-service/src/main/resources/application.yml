@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: inventory-service
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3326/inventory_service
+    username: appuser
+    password: apppassword@123
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+server:
+  port: 8082
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure.flyway: TRACE
+    org.flywaydb: DEBUG

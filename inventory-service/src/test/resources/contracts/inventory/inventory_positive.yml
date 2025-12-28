@@ -1,0 +1,12 @@
+description: "Verify that inventory service returns product status (positive) using query parameters"
+request:
+  method: GET
+  urlPath: /api/inventory
+  queryParameters:
+    skuCode: "oneplus_12"
+    quantity: "25"
+response:
+  status: 200
+  body: "true"
+  headers:
+    Content-Type: application/json
