@@ -1,0 +1,29 @@
+spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          inventory:
+            connect-timeout: 8000
+            read-timeout: 8000
+inventory:
+  url: "http://localhost:8082"
+resilience4j:
+  circuitbreaker:
+    instances:
+      inventory:
+
+        registerHealthIndicator: true
+        event-consumer-buffer-size: 10
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        minimum-number-of-calls: 5
+  retry:
+    instances:
+      inventory:
+        max-attempts: 3
+        wait-duration: 5s
