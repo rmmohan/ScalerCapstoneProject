@@ -1,19 +1,16 @@
-server:
-  port: 8081
-
 spring:
   application:
     name: order-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3316/order_service
-    username: appuser
-    password: apppassword@123
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://order-db:3306/orders}
+    username: ${SPRING_DATASOURCE_USERNAME:order_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:order_pass}
   jpa:
     hibernate:
       ddl-auto: none
   kafka:
-    bootstrap-servers: localhost:9094
+    bootstrap-servers: kafka:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
@@ -21,7 +18,7 @@ spring:
       retries: 10
       enable-idempotence: true
       properties:
-        schema.registry.url: http://localhost:8085
+        schema.registry.url: http://schema-registry:8081
         specific.avro.reader: true
         linger.ms: 5
         batch.size: 32768
@@ -34,7 +31,7 @@ spring:
             read-timeout: 3000
 
 inventory:
-  url: http://localhost:8082
+  url: http://inventory-service:8080
 
 springdoc:
   swagger-ui:
@@ -44,6 +41,9 @@ springdoc:
 
 # Actuator Endpoint Properties
 management:
+  tracing:
+    sampling:
+      probability: 1.0
   health:
     circuitbreakers:
       enabled: true
@@ -54,6 +54,17 @@ management:
     web:
       exposure:
         include: "*"
+  metrics:
+    tags:
+      application: order-service
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+  observations:
+    key-values:
+      application: order-service
 
 # Resilience4j Properties
 resilience4j:
@@ -74,3 +85,9 @@ resilience4j:
       inventory:
         max-attempts: 3
         wait-duration: 5s
+
+logging:
+  pattern:
+    level: "trace_id=%mdc{trace_id} span_id=%mdc{span_id} trace_flags=%mdc{trace_flags} %p"
+  level:
+    com.rv.microservices: DEBUG

@@ -7,12 +7,11 @@ spring:
             connect-timeout: 8000
             read-timeout: 8000
 inventory:
-  url: "http://localhost:8082"
+  url: http://inventory-service:8080
 resilience4j:
   circuitbreaker:
     instances:
       inventory:
-
         registerHealthIndicator: true
         event-consumer-buffer-size: 10
         slidingWindowType: COUNT_BASED

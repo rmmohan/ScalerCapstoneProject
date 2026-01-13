@@ -25,6 +25,7 @@ public class OrderService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void placeOrder(OrderRequest orderRequest) {
+        log.info("Checking inventory for SKU Code: {} and Quantity: {}", orderRequest.skuCode(), orderRequest.quantity());
         boolean inStock = inventoryClient.isInStock(orderRequest.skuCode(), orderRequest.quantity());
         if (inStock) {
             var order = mapToOrder(orderRequest);
@@ -40,11 +41,13 @@ public class OrderService {
             kafkaTemplate.send("order-placed", orderPlacedEvent);
             log.info("End- Sending OrderPlacedEvent {} to Kafka Topic", orderPlacedEvent);
         } else {
+            log.error("Product with Skucode {} is not in stock", orderRequest.skuCode());
             throw new InventoryNotFoundException("Product with Skucode " + orderRequest.skuCode() + " is not in stock");
         }
     }
 
     private static Order mapToOrder(OrderRequest orderRequest) {
+        log.info("Mapping OrderRequest to Order entity for SKU Code: {}", orderRequest.skuCode());
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
         order.setPrice(orderRequest.price());

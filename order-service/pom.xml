@@ -34,6 +34,9 @@
         <rest-assured.version>6.0.0</rest-assured.version>
         <avro.version>1.11.4</avro.version>
         <kafka-avro-serializer.version>7.6.1</kafka-avro-serializer.version>
+        <docker-compose-maven-plugin.version>4.0.0</docker-compose-maven-plugin.version>
+        <avro-maven-plugin.version>1.12.1</avro-maven-plugin.version>
+        <io.opentelemetry.version>1.50.0</io.opentelemetry.version>
 	</properties>
 	<dependencies>
         <dependency>
@@ -63,6 +66,20 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<!-- Micrometer Prometheus (managed by Spring Boot BOM) -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+		</dependency>
+		<!-- OpenTelemetry API (version from imported opentelemetry-bom) -->
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-api</artifactId>
 		</dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -172,6 +189,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${io.opentelemetry.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -211,7 +235,7 @@
 			<plugin>
 			    <groupId>com.dkanejs.maven.plugins</groupId>
 			    <artifactId>docker-compose-maven-plugin</artifactId>
-			    <version>4.0.0</version>
+			    <version>${docker-compose-maven-plugin.version}</version>
 			    <configuration>
 			        <composeFile>${project.basedir}/docker-compose.yml</composeFile>
 			        <!-- other configurations like detached mode, etc. -->
@@ -220,7 +244,7 @@
             <plugin>
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro-maven-plugin</artifactId>
-                <version>1.12.1</version>
+                <version>${avro-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>schemas</id>
