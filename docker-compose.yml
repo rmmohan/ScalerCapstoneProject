@@ -1,0 +1,359 @@
+# *************************
+# Templates
+# *************************
+x-logging: &default-logging
+  driver: loki
+  options:
+    loki-url: 'http://localhost:3100/api/prom/push'
+    loki-pipeline-stages: |
+      - multiline:
+          firstline: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}'
+          max_wait_time: 3s
+      - regex:
+          expression: '^(?P<date>\d{4}-\d{2}-\d{2})T(?P<time>\d{2}:\d{2}:\d{2}.\d{3}) (?P<message>(?s:.*))$$'
+
+x-app-dependencies: &app-dependencies
+  loki:
+    condition: service_started
+  keycloak:
+    condition: service_started
+
+# *************************
+# Services
+# *************************
+services:
+  # -------------------------
+  # KEYCLOAK DATABASE
+  # -------------------------
+  keycloak-db:
+    image: mysql:8.4.0
+    container_name: keycloak-db
+    environment:
+      MYSQL_ROOT_PASSWORD: kc_root
+      MYSQL_DATABASE: keycloak
+      MYSQL_USER: keycloak
+      MYSQL_PASSWORD: keycloak
+    volumes:
+      - keycloak_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # -------------------------
+  # KEYCLOAK
+  # -------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: start-dev --import-realm
+    ports:
+      - "8080:8080"
+    environment:
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://keycloak-db:3306/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+
+  # -------------------------
+  # LOKI
+  # -------------------------
+  loki:
+    image: grafana/loki:3.5.0
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --output-document=- http://localhost:3100/ready | grep -q -w ready || exit 1" ]
+      interval: 10s
+      timeout: 1s
+      retries: 12
+      start_period: 20s
+
+  # -------------------------
+  # PROMETHEUS
+  # -------------------------
+  prometheus:
+    image: prom/prometheus:v3.3.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/etc:/workspace
+    command:
+      - --config.file=/workspace/prometheus.yml
+      - --enable-feature=exemplar-storage
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --output-document=- http://localhost:9090/-/healthy | grep -q -w 'Prometheus Server is Healthy' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      loki:
+        condition: service_healthy
+    logging: *default-logging
+
+  # -------------------------
+  # TEMPO
+  # -------------------------
+  tempo:
+    image: grafana/tempo:2.7.2
+    volumes:
+      - ./tempo/etc/tempo.yml:/etc/tempo.yml
+    command: [ "-config.file=/etc/tempo.yml", "--target=all", "--storage.trace.backend=local", "--storage.trace.local.path=/var/tempo", "--auth.enabled=false" ]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    depends_on:
+      loki:
+        condition: service_healthy
+    logging: *default-logging
+
+  # -------------------------
+  # GRAFANA
+  # -------------------------
+  grafana:
+    image: grafana/grafana:12.0.1
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./grafana/dashboards:/etc/grafana/dashboards
+    depends_on:
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+    logging: *default-logging
+
+  # -------------------------
+  # KAFKA
+  # -------------------------
+  kafka:
+    image: apache/kafka:4.1.1
+    ports:
+      - "9092:9092"
+      - "9094:9094"      # host-accessible broker port
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,OUTSIDE://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,OUTSIDE://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,OUTSIDE:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 200s # Gives Kafka time to bootstrap before the first check
+  
+  # -------------------------
+  # SCHEMA REGISTRY
+  # -------------------------
+  schema-registry:
+    image: confluentinc/cp-schema-registry:8.0.3
+    container_name: schema-registry
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8085:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081
+#    healthcheck:
+#      test: ["CMD-SHELL", "curl --fail http://localhost:8081/subjects"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 5
+#      start_period: 15s
+
+  # -------------------------
+  # KAFKA UI
+  # -------------------------
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: kafka-ui
+    ports:
+      - "8086:8080"
+    depends_on:
+      kafka:
+        condition: service_started
+      schema-registry:
+        condition: service_started
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+
+  # -------------------------
+  # PRODUCT SERVICE DATABASE
+  # -------------------------
+  product-db:
+    image: mongo:7.0.5
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: product_root
+      MONGO_INITDB_DATABASE: products
+    volumes:
+      - product_mongo_data:/data/db
+
+  # -------------------------
+  # ORDER SERVICE DATABASE
+  # -------------------------
+  order-db:
+    image: mysql:8.4.0
+    ports:
+      - "3316:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: order_root
+      MYSQL_DATABASE: orders
+      MYSQL_USER: order_user
+      MYSQL_PASSWORD: order_pass
+    volumes:
+      - order_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # -------------------------
+  # INVENTORY SERVICE DATABASE
+  # -------------------------
+  inventory-db:
+    image: mysql:8.4.0
+    environment:
+      MYSQL_ROOT_PASSWORD: inv_root
+      MYSQL_DATABASE: inventory
+      MYSQL_USER: inv_user
+      MYSQL_PASSWORD: inv_pass
+    volumes:
+      - inventory_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # -------------------------
+  # API GATEWAY
+  # -------------------------
+  api-gateway:
+    build: "./api-gateway/"
+    ports:
+      - "9000:9000"
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/scaler
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: api-gateway
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    logging: *default-logging
+    depends_on: *app-dependencies
+
+  # -------------------------
+  # PRODUCT SERVICE
+  # -------------------------
+  product-service:
+    build: "./product-service/"
+    ports:
+      - "8087:8080"
+    environment:
+      SPRING_MONGODB_URI: mongodb://root:product_root@product-db:27017/products?authSource=admin
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: product-service
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    logging: *default-logging
+    depends_on: *app-dependencies
+
+  # -------------------------
+  # ORDER SERVICE
+  # -------------------------
+  order-service:
+    build: "./order-service/"
+    ports:
+      - "8088:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://order-db:3306/orders
+      SPRING_DATASOURCE_USERNAME: order_user
+      SPRING_DATASOURCE_PASSWORD: order_pass
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: order-service
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    logging: *default-logging
+    depends_on: *app-dependencies
+
+  # -------------------------
+  # INVENTORY SERVICE
+  # -------------------------
+  inventory-service:
+    build: "./inventory-service/"
+    ports:
+      - "8089:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://inventory-db:3306/inventory
+      SPRING_DATASOURCE_USERNAME: inv_user
+      SPRING_DATASOURCE_PASSWORD: inv_pass
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: inventory-service
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    logging: *default-logging
+    depends_on: *app-dependencies
+
+  # -------------------------
+  # NOTIFICATION SERVICE
+  # -------------------------
+  notification-service:
+    build: "./notification-service/"
+    ports:
+      - "8090:8080"
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_SERVICE_NAME: notification-service
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    logging: *default-logging
+    depends_on: *app-dependencies
+
+  # -------------------------
+  # FRONTEND
+  # -------------------------
+  scaler-ecommerce:
+    container_name: scaler-ecommerce
+    build: 
+      context: "./frontend/"
+      dockerfile: Dockerfile
+    image: scaler-ecommerce-ui:latest
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  product_mongo_data:
+  keycloak_mysql_data:
+  order_mysql_data:
+  inventory_mysql_data:

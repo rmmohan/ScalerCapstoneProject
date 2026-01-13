@@ -2,3 +2,4 @@
 /inventory-service/docker/mysql/data
 /product-service/docker
 /api-gateway/volume-data/mysql_keycloak_data
+/.idea
