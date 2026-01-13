@@ -2,10 +2,36 @@ spring:
   application:
     name: product-service
   mongodb:
-    uri: mongodb://root:password@localhost:27017/product-service?authSource=admin
+    uri: ${SPRING_MONGODB_URI:mongodb://root:product_root@product-db:27017/products?authSource=admin}
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
   api-docs:
     path: /api-docs
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    tags:
+      application: product-service
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+  observations:
+    key-values:
+      application: product-service
+      
+logging:
+  pattern:
+    level: "trace_id=%mdc{trace_id} span_id=%mdc{span_id} trace_flags=%mdc{trace_flags} %p"
+  level:
+    com.rv.microservices: DEBUG

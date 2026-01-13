@@ -31,6 +31,7 @@
         <springdoc-openapi.version>2.8.14</springdoc-openapi.version>
         <testcontainers.version>2.0.3</testcontainers.version>
         <rest-assured.version>6.0.0</rest-assured.version>
+        <io.opentelemetry.version>1.50.0</io.opentelemetry.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -51,6 +52,24 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+		<!-- Micrometer Prometheus (managed by Spring Boot BOM) -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+		</dependency>
+		<!-- OpenTelemetry API (version from imported opentelemetry-bom) -->
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-api</artifactId>
 		</dependency>
 
 		<dependency>
@@ -101,6 +120,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${io.opentelemetry.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -130,17 +156,6 @@
 					</excludes>
 				</configuration>
 			</plugin>
-			<plugin>
-			    <groupId>com.dkanejs.maven.plugins</groupId>
-			    <artifactId>docker-compose-maven-plugin</artifactId>
-			    <version>4.0.0</version>
-			    <configuration>
-			        <composeFile>${project.basedir}/docker-compose.yml</composeFile>
-			        <!-- other configurations like detached mode, etc. -->
-			    </configuration>
-			</plugin>
-
 		</plugins>
 	</build>
-
 </project>
