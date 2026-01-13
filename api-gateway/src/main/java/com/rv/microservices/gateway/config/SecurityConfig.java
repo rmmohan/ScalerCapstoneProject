@@ -20,7 +20,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of("http://react:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET","POST"));
         configuration.setAllowedHeaders(List.of("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -32,14 +32,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,
             CorsConfigurationSource corsConfigurationSource) throws Exception {
         return httpSecurity
-                .authorizeHttpRequests(authorize -> 
+                .authorizeHttpRequests(authorize ->
                     authorize
                         .requestMatchers(freeResourceUrls).permitAll()
                         .anyRequest().authenticated())
-                .cors(corsConfigurer -> 
+                .cors(corsConfigurer ->
                     corsConfigurer
                         .configurationSource(corsConfigurationSource))
-                .oauth2ResourceServer(oauth2 -> 
+                .oauth2ResourceServer(oauth2 ->
                     oauth2
                         .jwt(Customizer.withDefaults()))
                 .build();
