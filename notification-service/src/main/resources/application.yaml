@@ -14,9 +14,9 @@ spring:
             enable: true
 
   kafka:
-    bootstrap-servers: localhost:9094
+    bootstrap-servers: kafka:9092
     properties:
-      schema.registry.url: http://localhost:8085
+      schema.registry.url: http://schema-registry:8081
       specific.avro.reader: true
     consumer:
       group-id: notificationService
@@ -24,3 +24,29 @@ spring:
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    tags:
+      application: notification-service
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+  observations:
+    key-values:
+      application: notification-service
+
+logging:
+  pattern:
+    level: "trace_id=%mdc{trace_id} span_id=%mdc{span_id} trace_flags=%mdc{trace_flags} %p"
+  level:
+    com.rv.microservices: DEBUG
