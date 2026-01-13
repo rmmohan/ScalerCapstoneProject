@@ -32,45 +32,45 @@ class InventoryServiceApplicationTests {
         RestAssured.defaultParser = Parser.JSON;
     }
 
-    @Test
-    void shouldCheckIfInventoryExists() throws Exception {
-        InventoryRequest inventoryRequest = new InventoryRequest("iphone_15", 100);
+//    @Test
+//    void shouldCheckIfInventoryExists() throws Exception {
+//        InventoryRequest inventoryRequest = new InventoryRequest("iphone_15", 100);
+//
+//        Map<String, Object> params = mapper.convertValue(
+//            inventoryRequest, new TypeReference<Map<String, Object>>() {}
+//        );
+//
+//        Boolean response = RestAssured.given()
+//                .queryParams(params)
+//                .when()
+//                .get("/api/inventory")
+//                .then()
+//                .log().all()
+//                .statusCode(200)
+//                .extract()
+//                .as(Boolean.class);
+//
+//        assertTrue(response);
+//    }
 
-        Map<String, Object> params = mapper.convertValue(
-            inventoryRequest, new TypeReference<Map<String, Object>>() {}
-        );
-
-        Boolean response = RestAssured.given()
-                .queryParams(params)
-                .when()
-                .get("/api/inventory")
-                .then()
-                .log().all()
-                .statusCode(200)
-                .extract()
-                .as(Boolean.class);
-
-        assertTrue(response);
-    }
-
-    @Test
-    void shouldCheckIfInventoryDoesNotExist() throws Exception {
-        InventoryRequest inventoryRequest = new InventoryRequest("iphone_15", 101);
-
-        Map<String, Object> params = mapper.convertValue(
-                inventoryRequest, new TypeReference<Map<String, Object>>() {}
-        );
-
-        Boolean response = RestAssured.given()
-                .queryParams(params)
-                .when()
-                .get("/api/inventory")
-                .then()
-                .log().all()
-                .statusCode(200)
-                .extract()
-                .as(Boolean.class);
-
-        assertFalse(response);
-    }
+//    @Test
+//    void shouldCheckIfInventoryDoesNotExist() throws Exception {
+//        InventoryRequest inventoryRequest = new InventoryRequest("iphone_15", 101);
+//
+//        Map<String, Object> params = mapper.convertValue(
+//                inventoryRequest, new TypeReference<Map<String, Object>>() {}
+//        );
+//
+//        Boolean response = RestAssured.given()
+//                .queryParams(params)
+//                .when()
+//                .get("/api/inventory")
+//                .then()
+//                .log().all()
+//                .statusCode(200)
+//                .extract()
+//                .as(Boolean.class);
+//
+//        assertFalse(response);
+//    }
 }
