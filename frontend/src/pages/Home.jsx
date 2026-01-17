@@ -15,7 +15,7 @@ const Home = () => {
 
     const fetchProducts = async () => {
         try {
-            const res = await axios.get('http://localhost:9000/api/product', { headers });
+            const res = await axios.get('/api/product', { headers });
             setProducts(res.data);
         } catch (err) { console.error("Fetch products failed", err); }
     };
@@ -25,7 +25,7 @@ const Home = () => {
     const handlePlaceOrder = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:9000/api/order', {
+            const res = await axios.post('/api/order', {
                 skuCode: selectedProduct.skuCode,
                 quantity: Number(orderQty)
             }, { headers });
@@ -43,7 +43,7 @@ const Home = () => {
 
     const handleAddProduct = async (e) => {
         e.preventDefault();
-        await axios.post('http://localhost:9000/api/product', newProduct, { headers });
+        await axios.post('/api/product', newProduct, { headers });
         setShowProductModal(false);
         fetchProducts();
     };

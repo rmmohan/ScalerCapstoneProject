@@ -5,7 +5,7 @@ import { AuthProvider } from 'oidc-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const oidcConfig = {
-    authority: 'http://localhost:8181/realms/spring-microservices-security-realm',
+    authority: '/realms/scaler',
     redirectUri: window.location.origin,
     postLogoutRedirectUri: window.location.origin,
     clientId: 'react-client',
