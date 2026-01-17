@@ -50,6 +50,10 @@ services:
     ports:
       - "8080:8080"
     environment:
+      KC_PROXY_HEADERS: "xforwarded"
+      KC_HTTP_ENABLED: true
+      KC_HOSTNAME: "https://scaler-ecommerce/" # Include the full URL with protocol
+      KC_HOSTNAME_STRICT: true
       KC_DB: mysql
       KC_DB_URL: jdbc:mysql://keycloak-db:3306/keycloak
       KC_DB_USERNAME: keycloak
@@ -259,7 +263,7 @@ services:
     ports:
       - "9000:9000"
     environment:
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/scaler
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://scaler-ecommerce/realms/scaler
       OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_SERVICE_NAME: api-gateway
@@ -343,13 +347,12 @@ services:
   # FRONTEND
   # -------------------------
   scaler-ecommerce:
-    container_name: scaler-ecommerce
     build: 
       context: "./frontend/"
       dockerfile: Dockerfile
-    image: scaler-ecommerce-ui:latest
     ports:
       - "80:80"
+      - "443:443"
     restart: unless-stopped
 
 volumes:
