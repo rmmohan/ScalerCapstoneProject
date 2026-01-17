@@ -24,9 +24,10 @@ spring:
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
-      
+
 management:
   tracing:
+    enabled: true
     sampling:
       probability: 1.0
   endpoints:

@@ -1,4 +1,4 @@
-package com.rv.microservices.notification.config;
+package com.rv.microservices.notification.config.kafka;
 
 import com.rv.microservices.order.event.OrderPlacedEvent;
 import org.springframework.context.annotation.Bean;
