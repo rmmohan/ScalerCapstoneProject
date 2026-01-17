@@ -8,6 +8,7 @@ import com.rv.microservices.order.repository.OrderRepository;
 import com.rv.microservices.order.client.InventoryClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +39,8 @@ public class OrderService {
                     orderRequest.userDetails()
                             .lastName());
             log.info("Start- Sending OrderPlacedEvent {} to Kafka Topic", orderPlacedEvent);
-            kafkaTemplate.send("order-placed", orderPlacedEvent);
+            ProducerRecord<String, Object> record = new ProducerRecord<>("order-placed", orderPlacedEvent);
+            kafkaTemplate.send(record);
             log.info("End- Sending OrderPlacedEvent {} to Kafka Topic", orderPlacedEvent);
         } else {
             log.error("Product with Skucode {} is not in stock", orderRequest.skuCode());

@@ -1,4 +1,4 @@
-package com.rv.microservices.order.config;
+package com.rv.microservices.order.config.kafka;
 
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.context.annotation.Bean;

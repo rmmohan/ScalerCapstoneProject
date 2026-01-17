@@ -18,6 +18,7 @@ spring:
       retries: 10
       enable-idempotence: true
       properties:
+        interceptor.classes: com.rv.microservices.order.config.kafka.KafkaTracingProducerInterceptor
         schema.registry.url: http://schema-registry:8081
         specific.avro.reader: true
         linger.ms: 5
@@ -42,6 +43,7 @@ springdoc:
 # Actuator Endpoint Properties
 management:
   tracing:
+    enabled: true
     sampling:
       probability: 1.0
   health:
