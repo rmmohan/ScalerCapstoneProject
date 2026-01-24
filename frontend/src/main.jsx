@@ -6,6 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const oidcConfig = {
     authority: '/realms/scaler',
+    // authority: 'http://localhost:8080/realms/scaler',
     redirectUri: window.location.origin,
     postLogoutRedirectUri: window.location.origin,
     clientId: 'react-client',

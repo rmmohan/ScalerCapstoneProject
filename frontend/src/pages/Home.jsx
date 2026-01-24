@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from 'oidc-react';
+import { load } from "@cashfreepayments/cashfree-js";
 
 const Home = () => {
     const auth = useAuth();
@@ -16,6 +17,7 @@ const Home = () => {
     const fetchProducts = async () => {
         try {
             const res = await axios.get('/api/product', { headers });
+            // const res = await axios.get('http://localhost:8087/api/product', { headers });
             setProducts(res.data);
         } catch (err) { console.error("Fetch products failed", err); }
     };
@@ -25,14 +27,31 @@ const Home = () => {
     const handlePlaceOrder = async (e) => {
         e.preventDefault();
         try {
+            const {
+                preferred_username,
+                given_name,
+                family_name,
+                email,
+                phone_number
+            } = auth.userData.profile;
+
             const res = await axios.post('/api/order', {
+            // const res = await axios.post('http://localhost:8088/api/order', {
                 skuCode: selectedProduct.skuCode,
-                quantity: Number(orderQty)
+                price: selectedProduct.price * Number(orderQty),
+                quantity: Number(orderQty),
+                returnUrl: `${window.location.origin}/payment-result?order_id={order_id}`,
+                userDetails: {
+                    username: preferred_username,
+                    firstName: given_name,
+                    lastName: family_name,
+                    email: email,
+                    phoneNumber: phone_number
+                }
             }, { headers });
 
-            const msg = res?.data || "Order Placed!";
             setShowOrderModal(false);
-            alert(msg);
+            await startCheckout(res?.data?.payment_session_id);
         } catch (err) {
             const errMsg = err?.response?.data || err.message || "Order failed";
             console.error("Place order failed", err);
@@ -40,10 +59,23 @@ const Home = () => {
         }
     };
 
+    const startCheckout = async (sessionId) => {
+        if(sessionId) {
+            const cashfree = await load({ mode: "sandbox" });
+            cashfree.checkout({
+                paymentSessionId: sessionId,
+            }).then(result => {
+                if (result.error) console.error(result.error);
+            });
+        } else {
+            alert("Invalid payment session. Cannot proceed to checkout.");
+        }
+    };
 
     const handleAddProduct = async (e) => {
         e.preventDefault();
         await axios.post('/api/product', newProduct, { headers });
+        // await axios.post('http://localhost:8087/api/product', newProduct, { headers });
         setShowProductModal(false);
         fetchProducts();
     };

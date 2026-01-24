@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { useAuth } from 'oidc-react';
 import Home from './pages/Home';
+import PaymentResult from "./pages/PaymentResult.jsx";
 
 function App() {
     const auth = useAuth();
@@ -30,6 +31,7 @@ function App() {
             <div className="container">
                 <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/payment-result" element={<PaymentResult />} />
                 </Routes>
             </div>
         </Router>
