@@ -297,6 +297,10 @@ services:
     ports:
       - "8088:8080"
     environment:
+      CASHFREE_CLIENT_ID: TEST1096465358898c8811db812cf11135646901
+      CASHFREE_CLIENT_SECRET: cfsk_ma_test_ae7c9d2aecb3d88f1a55ce6a67a4a8a4_905842f3
+      CASHFREE_BASE_URL: https://sandbox.cashfree.com/pg
+      CASHFREE_API_VERSION: "2025-01-01"
       SPRING_DATASOURCE_URL: jdbc:mysql://order-db:3306/orders
       SPRING_DATASOURCE_USERNAME: order_user
       SPRING_DATASOURCE_PASSWORD: order_pass
@@ -347,7 +351,7 @@ services:
   # FRONTEND
   # -------------------------
   scaler-ecommerce:
-    build: 
+    build:
       context: "./frontend/"
       dockerfile: Dockerfile
     ports:
