@@ -84,7 +84,8 @@ class OrderServiceApplicationTests {
 //    }
 
 	private OrderRequest getOrderRequest(String skuCode, Integer quantity) {
-        UserDetails userDetails = new UserDetails("John", "Doe", "test@example.com");
-		return new OrderRequest(skuCode, BigDecimal.valueOf(1200), quantity, userDetails);
+        String returnUrl = "http://localhost:8080/api/order/status/";
+        UserDetails userDetails = new UserDetails("johndoe", "John", "Doe", "test@example.com", "0000000000");
+		return new OrderRequest(skuCode, BigDecimal.valueOf(1200), quantity, returnUrl, userDetails);
 	}
 }

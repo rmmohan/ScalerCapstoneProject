@@ -9,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/order")
 @RequiredArgsConstructor
@@ -18,15 +21,27 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<String> placeOrder(@RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<?> placeOrder(@RequestBody OrderRequest orderRequest) {
         try {
             log.info("Received request to place order: {}", orderRequest);
-            orderService.placeOrder(orderRequest);
+            Map<String, Object> response = orderService.placeOrder(orderRequest);
             log.info("Order placed successfully for request: {}", orderRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Order Placed Successfully");
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (InventoryNotFoundException ex) {
             log.error("Error placing order: {}", ex.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
+    }
+
+    @GetMapping("/status/{orderId}")
+    public ResponseEntity<?> checkStatus(@PathVariable String orderId) {
+        log.info("Received request to check status for orderId: {}", orderId);
+        Map<String, Object> result = orderService.getOrderStatus(orderId);
+
+        Object status = result.get("order_status");
+        Map<String, Object> response = new HashMap<>();
+        response.put("orderId", orderId);
+        response.put("cashfreeStatus", status);
+        return ResponseEntity.ok(response);
     }
 }

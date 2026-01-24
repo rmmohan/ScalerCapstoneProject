@@ -19,7 +19,14 @@ public class Order {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   private String orderNumber;
+  private String firstName;
+  private String lastName;
+  private String email;
   private String skuCode;
   private BigDecimal price;
   private Integer quantity;
+
+  @ManyToOne
+  @JoinColumn(name = "payment_status_id")
+  private PaymentStatus paymentStatus;
 }
