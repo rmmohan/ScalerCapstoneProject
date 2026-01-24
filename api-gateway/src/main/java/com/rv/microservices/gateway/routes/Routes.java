@@ -24,7 +24,7 @@ public class Routes {
     public RouterFunction<ServerResponse> productServiceRoute() {
         log.info("Routing for Product Service initialized");
         return GatewayRouterFunctions.route("product_service")
-                .route(path("/api/product"), http())
+                .route(path("/api/product/**"), http())
                 .before(uri("http://product-service:8080"))
                 .filter(circuitBreaker("productServiceCircuitBreaker", URI.create("forward:/fallbackRoute")))
                 .build();
@@ -34,7 +34,7 @@ public class Routes {
     public RouterFunction<ServerResponse> orderServiceRoute() {
         log.info("Routing for Order Service initialized");
         return GatewayRouterFunctions.route("order_service")
-                .route(path("/api/order"), http())
+                .route(path("/api/order/**"), http())
                 .before(uri("http://order-service:8080"))
                 .filter(circuitBreaker("orderServiceCircuitBreaker", URI.create("forward:/fallbackRoute")))
                 .build();
@@ -44,7 +44,7 @@ public class Routes {
     public RouterFunction<ServerResponse> inventoryServiceRoute() {
         log.info("Routing for Inventory Service initialized");
         return GatewayRouterFunctions.route("inventory_service")
-                .route(path("/api/inventory"), http())
+                .route(path("/api/inventory/**"), http())
                 .before(uri("http://inventory-service:8080"))
                 .filter(circuitBreaker("inventoryServiceCircuitBreaker", URI.create("forward:/fallbackRoute")))
                 .build();
