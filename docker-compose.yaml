@@ -52,8 +52,8 @@ services:
     environment:
       KC_PROXY_HEADERS: "xforwarded"
       KC_HTTP_ENABLED: true
-      KC_HOSTNAME: "https://scaler-ecommerce/" # Include the full URL with protocol
-      KC_HOSTNAME_STRICT: true
+      KC_HOSTNAME: "https://scaler-ecommerce" # Include the full URL with protocol
+      KC_HOSTNAME_STRICT: false
       KC_DB: mysql
       KC_DB_URL: jdbc:mysql://keycloak-db:3306/keycloak
       KC_DB_USERNAME: keycloak
@@ -242,6 +242,8 @@ services:
   # -------------------------
   inventory-db:
     image: mysql:8.4.0
+    ports:
+      - "3326:3306"
     environment:
       MYSQL_ROOT_PASSWORD: inv_root
       MYSQL_DATABASE: inventory
